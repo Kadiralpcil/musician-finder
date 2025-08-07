@@ -1,7 +1,7 @@
-// frontend/src/hooks/useAuth.ts
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { authService } from '@/services/api.service';
-import { useRouter } from 'next/navigation';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ApiError, authService } from "@/services/api.service";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export const useLogin = () => {
   const router = useRouter();
@@ -11,19 +11,17 @@ export const useLogin = () => {
     mutationFn: authService.login,
     onSuccess: (response) => {
       if (response.success && response.data) {
-        // Store token and user data
-        localStorage.setItem('auth_token', response.data.token);
-        localStorage.setItem('user_data', JSON.stringify(response.data.user));
-        
-        // Update query cache
-        queryClient.setQueryData(['currentUser'], response.data.user);
-        
-        // Redirect to dashboard or home
-        router.push('/dashboard');
+        localStorage.setItem("auth_token", response.data.token);
+        localStorage.setItem("user_data", JSON.stringify(response.data.user));
+        queryClient.setQueryData(["currentUser"], response.data.user);
+        router.push("/");
       }
     },
-    onError: (error) => {
-      console.error('Login failed:', error);
+    onError: (error: ApiError) => {
+      toast.error(error.message, {
+        position: "top-right",
+        richColors: true,
+      });
     },
   });
 };
@@ -36,19 +34,17 @@ export const useRegister = () => {
     mutationFn: authService.register,
     onSuccess: (response) => {
       if (response.success && response.data) {
-        // Store token and user data
-        localStorage.setItem('auth_token', response.data.token);
-        localStorage.setItem('user_data', JSON.stringify(response.data.user));
-        
-        // Update query cache
-        queryClient.setQueryData(['currentUser'], response.data.user);
-        
-        // Redirect to dashboard or profile setup
-        router.push('/profile/setup');
+        localStorage.setItem("auth_token", response.data.token);
+        localStorage.setItem("user_data", JSON.stringify(response.data.user));
+        queryClient.setQueryData(["currentUser"], response.data.user);
+        router.push("/");
       }
     },
-    onError: (error) => {
-      console.error('Registration failed:', error);
+    onError: (error: ApiError) => {
+      toast.error(error.message, {
+        position: "top-right",
+        richColors: true,
+      });
     },
   });
 };
@@ -62,9 +58,9 @@ export const useLogout = () => {
     onSuccess: () => {
       // Clear query cache
       queryClient.clear();
-      
+
       // Redirect to login
-      router.push('/login');
+      router.push("/login");
     },
   });
 };

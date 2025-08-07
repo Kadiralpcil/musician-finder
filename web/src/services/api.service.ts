@@ -1,6 +1,11 @@
-import { ApiResponse, LoginRequest, RegisterRequest, AuthResponse } from '@/types/api.types';
+import {
+  ApiResponse,
+  LoginRequest,
+  RegisterRequest,
+  AuthResponse,
+} from "@/types/api.types";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 class ApiError extends Error {
   constructor(
@@ -9,7 +14,7 @@ class ApiError extends Error {
     public response?: ApiResponse
   ) {
     super(message);
-    this.name = 'ApiError';
+    this.name = "ApiError";
   }
 }
 
@@ -18,17 +23,17 @@ async function fetchApi<T>(
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
   const url = `${API_BASE_URL}${endpoint}`;
-  
+
   const config: RequestInit = {
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...options.headers,
     },
     ...options,
   };
 
   // Add auth token if available
-  const token = localStorage.getItem('auth_token');
+  const token = localStorage.getItem("auth_token");
   if (token) {
     config.headers = {
       ...config.headers,
@@ -41,7 +46,7 @@ async function fetchApi<T>(
 
   if (!response.ok) {
     throw new ApiError(
-      data.message || 'An error occurred',
+      data.message || "An error occurred",
       response.status,
       data
     );
@@ -51,23 +56,27 @@ async function fetchApi<T>(
 }
 
 export const authService = {
-  login: async (credentials: LoginRequest): Promise<ApiResponse<AuthResponse>> => {
-    return fetchApi<AuthResponse>('/api/auth/login', {
-      method: 'POST',
+  login: async (
+    credentials: LoginRequest
+  ): Promise<ApiResponse<AuthResponse>> => {
+    return fetchApi<AuthResponse>("/auth/login", {
+      method: "POST",
       body: JSON.stringify(credentials),
     });
   },
 
-  register: async (userData: RegisterRequest): Promise<ApiResponse<AuthResponse>> => {
-    return fetchApi<AuthResponse>('/api/auth/register', {
-      method: 'POST',
+  register: async (
+    userData: RegisterRequest
+  ): Promise<ApiResponse<AuthResponse>> => {
+    return fetchApi<AuthResponse>("/auth/register", {
+      method: "POST",
       body: JSON.stringify(userData),
     });
   },
 
   logout: async (): Promise<void> => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user_data');
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("user_data");
   },
 };
 

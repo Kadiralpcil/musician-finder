@@ -1,4 +1,3 @@
-// backend/src/controllers/auth.controller.ts
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import prisma from '../prisma/client';
@@ -7,7 +6,7 @@ import { ApiResponse, AuthResponse, LoginRequest, RegisterRequest } from '../typ
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   const { name, email, password }: RegisterRequest = req.body;
-
+  console.log("hocam", name, email, password)
   try {
     if (!name || !email || !password) {
       res.status(400).json({
@@ -56,7 +55,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     } as ApiResponse<AuthResponse>);
 
   } catch (err) {
-    console.error('Registration error:', err);
+    console.error('hocam, Registration error:', err);
     res.status(500).json({
       success: false,
       message: 'Registration failed',
