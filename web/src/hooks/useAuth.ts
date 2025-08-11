@@ -1,66 +1,126 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ApiError, authService } from "@/services/api.service";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+// hooks/useAuth.ts
+import { useRouter } from 'next/navigation';
+import { useDispatch, useSelector } from 'react-redux';
+import { 
+  useLoginMutation, 
+  useRegisterMutation, 
+  useLogoutMutation 
+} from '@/store/api/authApi';
+import { 
+  setCredentials, 
+  clearCredentials, 
+  selectCurrentUser, 
+  selectIsAuthenticated 
+} from '@/store/slices/authSlice';
+import type { RootState } from '@/store/store';
+import { LoginRequest, RegisterRequest } from '@/types/api.types';
+
+export const useAuth = () => {
+  const dispatch = useDispatch();
+  const router = useRouter();
+  
+  const user = useSelector((state: RootState) => selectCurrentUser(state));
+  const isAuthenticated = useSelector((state: RootState) => selectIsAuthenticated(state));
+
+  // Debug log
+  console.log('🔍 Auth Debug:', { user, isAuthenticated, fullState: (state: RootState) => state.auth });
+
+  return {
+    user,
+    isAuthenticated,
+  };
+};
 
 export const useLogin = () => {
+  const dispatch = useDispatch();
   const router = useRouter();
-  const queryClient = useQueryClient();
+  const [loginMutation, { isLoading, error }] = useLoginMutation();
 
-  return useMutation({
-    mutationFn: authService.login,
-    onSuccess: (response) => {
-      if (response.success && response.data) {
-        localStorage.setItem("auth_token", response.data.token);
-        localStorage.setItem("user_data", JSON.stringify(response.data.user));
-        queryClient.setQueryData(["currentUser"], response.data.user);
-        router.push("/");
+  const login = async (credentials: LoginRequest) => {
+    try {
+      const result = await loginMutation(credentials).unwrap();
+      
+      if (result.success && result.data) {
+        // Set Redux state
+        dispatch(setCredentials({
+          user: result.data.user,
+          token: result.data.token,
+        }));
+        
+        // Redirect to dashboard
+        router.push('/dashboard');
+        
+        return result;
       }
-    },
-    onError: (error: ApiError) => {
-      toast.error(error.message, {
-        position: "top-right",
-        richColors: true,
-      });
-    },
-  });
+    } catch (error) {
+      console.error('Login failed:', error);
+      throw error;
+    }
+  };
+
+  return {
+    login,
+    isLoading,
+    error,
+  };
 };
 
 export const useRegister = () => {
+  const dispatch = useDispatch();
   const router = useRouter();
-  const queryClient = useQueryClient();
+  const [registerMutation, { isLoading, error }] = useRegisterMutation();
 
-  return useMutation({
-    mutationFn: authService.register,
-    onSuccess: (response) => {
-      if (response.success && response.data) {
-        localStorage.setItem("auth_token", response.data.token);
-        localStorage.setItem("user_data", JSON.stringify(response.data.user));
-        queryClient.setQueryData(["currentUser"], response.data.user);
-        router.push("/");
+  const register = async (userData: RegisterRequest) => {
+    try {
+      const result = await registerMutation(userData).unwrap();
+      
+      if (result.success && result.data) {
+        // Set Redux state
+        dispatch(setCredentials({
+          user: result.data.user,
+          token: result.data.token,
+        }));
+        
+        // Redirect to dashboard
+        router.push('/dashboard');
+        
+        return result;
       }
-    },
-    onError: (error: ApiError) => {
-      toast.error(error.message, {
-        position: "top-right",
-        richColors: true,
-      });
-    },
-  });
+    } catch (error) {
+      console.error('Registration failed:', error);
+      throw error;
+    }
+  };
+
+  return {
+    register,
+    isLoading,
+    error,
+  };
 };
 
 export const useLogout = () => {
+  const dispatch = useDispatch();
   const router = useRouter();
-  const queryClient = useQueryClient();
+  const [logoutMutation] = useLogoutMutation();
 
-  return useMutation({
-    mutationFn: authService.logout,
-    onSuccess: () => {
-      // Clear query cache
-      queryClient.clear();
+  const logout = async () => {
+    try {
+      // Call logout API (optional - for server-side token invalidation)
+      await logoutMutation().unwrap();
+    } catch (error) {
+      // Even if API fails, still clear local state
+      console.warn('Logout API failed, but clearing local state:', error);
+    } finally {
+      // Clear Redux state
+      dispatch(clearCredentials());
+      
+      // Redirect to home
+      router.push('/');
+    }
+  };
 
-      // Redirect to login
-      router.push("/login");
-    },
-  });
+  return {
+    logout,
+  };
 };

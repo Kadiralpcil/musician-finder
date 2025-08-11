@@ -8,14 +8,14 @@ export default function LoginPage() {
   const loginMutation = useLogin();
 
   const handleSubmit = (data: LoginRequest) => {
-    loginMutation.mutate(data);
+    loginMutation.login(data);
   };
 
   return (
     <AuthForm
       type="login"
       onSubmit={handleSubmit}
-      isLoading={loginMutation.isPending}
+      isLoading={loginMutation.isLoading}
       title="Welcome Back"
       description="Sign in to your Musician Finder account"
       submitButtonText="Sign In"
